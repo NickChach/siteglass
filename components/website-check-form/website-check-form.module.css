@@ -1,0 +1,99 @@
+.form {
+	margin-top: 1.75rem;
+}
+
+.form label {
+	display: block;
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+}
+
+.urlField {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	border: 0.0625rem solid #adb3cc;
+	border-radius: 0.3125rem;
+	padding-inline: 0.85rem;
+	background: var(--paper);
+}
+
+.urlField svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+	color: #6c7598;
+}
+
+.urlField:focus-within {
+	outline: 0.1875rem solid var(--blue);
+	outline-offset: 0.1875rem;
+	border-color: var(--blue);
+}
+
+.urlField input {
+	color: var(--ink);
+	border: 0;
+	outline: 0;
+	padding-block: 0.85rem;
+	width: 100%;
+	min-width: 0;
+	background: transparent;
+	border-radius: 0;
+	font-size: 1rem;
+}
+
+.urlField input::placeholder {
+	opacity: 1;
+	color: #69718d;
+}
+
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.7rem;
+	width: 100%;
+	padding: 0.8rem 1rem;
+	margin-top: 0.75rem;
+	background: var(--blue);
+	color: var(--paper);
+	border: 0.0625rem solid var(--blue);
+	border-radius: 0.3125rem;
+}
+
+.button svg {
+	width: 1.2rem;
+	height: 1.2rem;
+	flex-shrink: 0;
+}
+
+.button:hover {
+	background: #2034af;
+}
+
+.button:active {
+	background: #192c98;
+}
+
+.hint {
+	font-size: 0.8rem;
+	text-align: center;
+	color: var(--muted);
+	margin-top: 0.8rem;
+}
+
+.feedback {
+	margin-top: 1rem;
+	padding: 0.75rem;
+	background: var(--lilac);
+	border-radius: 0.3125rem;
+	font-size: 0.875rem;
+}
+
+@media (max-width: 26.875rem) {
+	.urlField {
+		gap: 0.45rem;
+		padding-inline: 0.6rem;
+	}
+}

@@ -1,0 +1,207 @@
+.stage {
+	position: relative;
+	isolation: isolate;
+	display: grid;
+	justify-items: center;
+	padding: 2.4rem 2rem 1.3rem;
+	background-color: var(--lilac);
+	background-image: linear-gradient(#2d42cd0c 0.0625rem, transparent 0.0625rem), linear-gradient(90deg, #2d42cd0c 0.0625rem, transparent 0.0625rem);
+	background-size: 1.75rem 1.75rem;
+	border-radius: 50% 50% 0.375rem 0.375rem / 30% 30% 0.375rem 0.375rem;
+}
+
+.orbit {
+	position: absolute;
+	z-index: -1;
+	width: 90%;
+	aspect-ratio: 1;
+	border: 0.0625rem solid #2d42cd28;
+	border-radius: 50%;
+	top: 1.4rem;
+}
+
+.orbit::after {
+	content: "";
+	position: absolute;
+	inset: 1.25rem;
+	border: 0.0625rem solid #2d42cd18;
+	border-radius: inherit;
+}
+
+.frame {
+	position: relative;
+	width: 100%;
+	max-width: 29rem;
+	min-width: 0;
+	padding: 0.875rem;
+}
+
+.topLeft, .topRight, .bottomLeft, .bottomRight {
+	position: absolute;
+	width: 1.6875rem;
+	height: 1.6875rem;
+	border: solid var(--blue);
+}
+
+.topLeft {
+	left: 0;
+	top: 0;
+	border-width: 0.1875rem 0 0 0.1875rem;
+}
+
+.topRight {
+	right: 0;
+	top: 0;
+	border-width: 0.1875rem 0.1875rem 0 0;
+}
+
+.bottomLeft {
+	left: 0;
+	bottom: 0;
+	border-width: 0 0 0.1875rem 0.1875rem;
+}
+
+.bottomRight {
+	right: 0;
+	bottom: 0;
+	border-width: 0 0.1875rem 0.1875rem 0;
+}
+
+.browser {
+	background: var(--paper);
+	border: 0.0625rem solid #2d42cd5c;
+	border-radius: 0.625rem;
+	overflow: hidden;
+	box-shadow: 0.5rem 0.625rem 0 #2d42cd14;
+}
+
+.browserBar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.7rem;
+	padding: 0.85rem 1rem;
+	border-bottom: 0.0625rem solid #e1e3ee;
+	color: var(--muted);
+	background: #fafafd;
+	font-size: 0.75rem;
+}
+
+.symbol {
+	width: 1.15rem;
+	height: 1.15rem;
+	color: var(--blue);
+	flex-shrink: 0;
+	stroke-width: 3;
+}
+
+.dots {
+	display: flex;
+	gap: 0.3125rem;
+}
+
+.dots i {
+	height: 0.375rem;
+	width: 0.375rem;
+	background: #bcc0d5;
+	border-radius: 50%;
+}
+
+.checkPanel {
+	padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.checkPanel h2 {
+	font-family: var(--display-font), sans-serif;
+	font-weight: 400;
+	font-size: 2.2rem;
+	letter-spacing: -0.05em;
+	line-height: 1.14;
+}
+
+.intro {
+	color: var(--muted);
+	font-size: 0.875rem;
+	margin-top: 0.75rem;
+}
+
+.browserBottom {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.6rem;
+	padding: 0.85rem 1rem;
+	border-top: 0.0625rem solid #e1e3ee;
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+.wordpressMark {
+	font-family: Georgia, serif;
+	font-size: 0.9rem;
+	font-style: italic;
+	display: grid;
+	place-items: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	line-height: 1;
+	border: 0.0625rem solid currentColor;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.caption {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: 0.8rem;
+	color: #454f9b;
+	margin-top: 1.1rem;
+}
+
+.caption span {
+	font-size: 1.3rem;
+	line-height: 1;
+}
+
+@media (max-width: 68.75rem) {
+	.stage {
+		padding-inline: 1rem;
+	}
+
+	.checkPanel {
+		padding-inline: 1.3rem;
+	}
+}
+
+@media (max-width: 48.75rem) {
+	.stage {
+		padding: 1.75rem 1.25rem 1.15rem;
+	}
+
+	.checkPanel {
+		padding: 1.5rem;
+	}
+}
+
+@media (max-width: 26.875rem) {
+	.stage {
+		padding-inline: 0.65rem;
+	}
+
+	.frame {
+		padding: 0.625rem;
+	}
+
+	.checkPanel {
+		padding: 1.4rem 1.05rem;
+	}
+
+	.checkPanel h2 {
+		font-size: 2rem;
+	}
+
+	.intro {
+		font-size: 0.85rem;
+	}
+}

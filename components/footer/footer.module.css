@@ -1,0 +1,23 @@
+.footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 2rem;
+	padding-block: 1.4rem;
+	border-top: 0.0625rem solid #cbc8d8;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+@media (max-width: 48.75rem) {
+	.footer {
+		font-size: 0.75rem;
+		gap: 1.5rem;
+	}
+}
+
+@media (max-width: 26.875rem) {
+	.footer {
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+}

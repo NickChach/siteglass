@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Siteglass
 
-## Getting Started
+A Next.js implementation of the Siteglass HTML/CSS landing page. Built with the
+App Router, TypeScript, React, and CSS Modules. The supplied IBM Plex Sans and
+Space Grotesk fonts are served locally; their licenses are in `app/fonts/`.
 
-First, run the development server:
+## Development
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+```sh
+bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+bun run build
+bun start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
 
-## Learn More
+- `app/page.tsx` composes the header, hero, how-it-works section, and footer.
+- `components/` keeps section markup and CSS Modules together.
+- `app/globals.css` owns shared tokens, resets, the page container, and focus styles.
+- `WebsiteCheckForm` is the only client component; the surrounding page renders on the server.
 
-To learn more about Next.js, take a look at the following resources:
+CSS uses relative units, including the responsive breakpoints.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Inspection form
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This is a frontend implementation. The form validates HTTP/HTTPS website
+addresses and announces that scanning is not connected yet. It does not send
+website addresses anywhere or generate inspection results. Connect the form to
+an inspection service when its API is available.
 
-## Deploy on Vercel
+## Checks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```sh
+bun run lint
+bunx tsc --noEmit
+bun run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The current ESLint dependency cannot load TypeScript 7. Lint will remain blocked
+until the tooling supports it; the production build still checks TypeScript.

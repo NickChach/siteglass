@@ -1,0 +1,99 @@
+.hero {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	align-items: center;
+	gap: 3rem;
+	padding-block: 3.45rem 4.7rem;
+}
+
+.copy {
+	padding-bottom: 0.6rem;
+}
+
+.copy h1 {
+	font-family: var(--display-font), sans-serif;
+	font-size: clamp(4.2rem, 6.7vw, 6.5rem);
+	font-weight: 400;
+	line-height: 1.02;
+	letter-spacing: -0.065em;
+	color: var(--blue);
+}
+
+.description {
+	font-size: 1.18rem;
+	line-height: 1.65;
+	max-width: 24rem;
+	margin-top: 1.8rem;
+}
+
+.caption {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+	color: var(--muted);
+	margin-top: 2.1rem;
+}
+
+.caption svg {
+	width: 1.6rem;
+	height: 1.6rem;
+	flex-shrink: 0;
+}
+
+.caption p {
+	max-width: 17rem;
+	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
+@media (min-width: 93.75rem) {
+	.hero {
+		gap: 5rem;
+		padding-block: 4.5rem 5.5rem;
+	}
+}
+
+@media (max-width: 68.75rem) {
+	.hero {
+		gap: 1.8rem;
+	}
+
+	.copy h1 {
+		font-size: clamp(3.5rem, 7.2vw, 5.3rem);
+	}
+
+	.description {
+		font-size: 1.08rem;
+	}
+}
+
+@media (max-width: 48.75rem) {
+	.hero {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 2rem;
+		padding-block: 2.25rem 2.8rem;
+	}
+
+	.copy h1 {
+		font-size: clamp(3.6rem, 10vw, 5.5rem);
+	}
+
+	.description {
+		max-width: 27rem;
+		margin-top: 1.3rem;
+	}
+
+	.caption {
+		display: none;
+	}
+}
+
+@media (max-width: 26.875rem) {
+	.hero {
+		padding-top: 1.65rem;
+	}
+
+	.copy h1 {
+		font-size: clamp(3rem, 12vw, 4.7rem);
+	}
+}
