@@ -1,34 +1,21 @@
-import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
+import type { Metadata } from "next";
+import { IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
-const ibmPlexSans = localFont({
-	src: "./fonts/ibm-plex-sans.ttf",
-	variable: "--body-font",
-	weight: "400",
-	display: "swap",
-});
-
-const spaceGrotesk = localFont({
-	src: "./fonts/space-grotesk.ttf",
-	variable: "--display-font",
-	weight: "400",
-	display: "swap",
+const IbmPlexSans = IBM_Plex_Sans({
+	weight: ["300", "400", "700"],
+	subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
 	title: "Siteglass | Take a closer look at your WordPress site",
 	description:
-		"Take a closer look at your website. Siteglass identifies WordPress websites, then checks for signs they may have been hacked. Start with a single link.",
-};
-
-export const viewport: Viewport = {
-	themeColor: "#f7eef2",
+		"Take a closer look at your website. Siteglass checks WordPress websites for signs they may have been hacked. Start with a single link.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
 	return (
-		<html lang="en" data-scroll-behavior="smooth" className={`${ibmPlexSans.variable} ${spaceGrotesk.variable}`}>
+		<html lang="en" data-scroll-behavior="smooth" className={IbmPlexSans.className}>
 			<body>{children}</body>
 		</html>
 	);

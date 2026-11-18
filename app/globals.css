@@ -22,7 +22,6 @@ body {
 	margin: 0;
 	background: var(--canvas);
 	color: var(--ink);
-	font-family: var(--body-font), sans-serif;
 	font-size: 1rem;
 	line-height: 1.6;
 }
