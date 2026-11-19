@@ -35,7 +35,7 @@ export default function WebsiteCheckForm() {
 	return (
 		<form id="website-check" className={styles.form} onSubmit={handleSubmit}>
 			<label htmlFor="website-url">Website address</label>
-			<div className={styles.urlField}>
+			<section className={styles.urlField}>
 				<svg viewBox="0 0 24 24" aria-hidden="true">
 					<circle cx="12" cy="12" r="9" />
 					<ellipse cx="12" cy="12" rx="4" ry="9" />
@@ -55,7 +55,7 @@ export default function WebsiteCheckForm() {
 					onChange={handleChange}
 					required
 				/>
-			</div>
+			</section>
 			<button className={styles.button} type="submit">
 				Check my website
 				<svg viewBox="0 0 24 24" aria-hidden="true">
@@ -63,7 +63,9 @@ export default function WebsiteCheckForm() {
 					<path d="m15.5 15.5 5 5" />
 				</svg>
 			</button>
-			<p className={styles.hint} id="url-hint">One link. No account needed.</p>
+			<p className={styles.hint} id="url-hint">
+				One link. No account needed.
+			</p>
 			<div role="status" aria-atomic="true">
 				{feedback && <p className={styles.feedback}>{feedback}</p>}
 			</div>

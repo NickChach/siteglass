@@ -11,7 +11,7 @@ export default function Header() {
 	return (
 		<header className={styles.header}>
 			<a href="/" aria-label="Siteglass home" className={styles.logo}>
-				<InspectionSymbol />
+				<InspectionSymbol className={styles.symbol} />
 				<span className={`${SpaceGrotesk.className} ${styles.wordmark}`}>
 					siteglass<span className={styles.period}>.</span>
 				</span>

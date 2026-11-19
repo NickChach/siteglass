@@ -21,12 +21,17 @@ const steps: InspectionStep[] = [
 
 export default function HowItWorks() {
 	return (
-		<section className={styles.section} id="how-it-works" aria-labelledby="how-title">
-			<h2 id="how-title">One address.<br />Two useful checks.</h2>
+		<article className={styles.section} id="how-it-works" aria-labelledby="how-title">
+			<h2 id="how-title">
+				<span>One address. </span>
+				<span>Two useful checks.</span>
+			</h2>
 			<ol className={styles.steps} role="list">
 				{steps.map((step, index) => (
 					<li key={step.id}>
-						<span className={styles.number} aria-hidden="true">{index + 1}</span>
+						<span className={styles.number} aria-hidden="true">
+							{index + 1}
+						</span>
 						<div>
 							<h3>{step.title}</h3>
 							<p>{step.description}</p>
@@ -34,6 +39,6 @@ export default function HowItWorks() {
 					</li>
 				))}
 			</ol>
-		</section>
+		</article>
 	);
 }

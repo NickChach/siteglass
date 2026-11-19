@@ -12,7 +12,7 @@ export default function Hero() {
 		<article className={styles.hero} aria-labelledby="hero-title">
 			<section className={styles.copy}>
 				<h1 id="hero-title" className={SpaceGrotesk.className}>
-					<span>Looks fine.</span>
+					<span>Looks fine. </span>
 					<span>Look closer.</span>
 				</h1>
 				<p className={styles.description}>
