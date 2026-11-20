@@ -1,39 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { FormEvent } from "react";
+import { useActionState, useState } from "react";
+import { checkWebsite } from "@/app/actions/check-website";
 import styles from "./website-check-form.module.css";
 
 export default function WebsiteCheckForm() {
-	const inputRef = useRef<HTMLInputElement>(null);
-	const [feedback, setFeedback] = useState("");
-
-	function handleSubmit(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-		const input = inputRef.current;
-		if (!input) return;
-
-		try {
-			const address = new URL(input.value);
-			if (!["http:", "https:"].includes(address.protocol) || !address.hostname) {
-				throw new Error("Unsupported website address");
-			}
-		} catch {
-			input.setCustomValidity("Enter a website address starting with http:// or https://.");
-			input.reportValidity();
-			return;
-		}
-
-		setFeedback("Website scanning is not connected yet. No check has been performed.");
-	}
-
-	function handleChange() {
-		inputRef.current?.setCustomValidity("");
-		setFeedback("");
-	}
+	const [website, setWebsite] = useState("");
+	const [, submitWebsite, pending] = useActionState(checkWebsite, null);
 
 	return (
-		<form id="website-check" className={styles.form} onSubmit={handleSubmit}>
+		<form id="website-check" className={styles.form} action={submitWebsite} aria-busy={pending}>
 			<label htmlFor="website-url">Website address</label>
 			<section className={styles.urlField}>
 				<svg viewBox="0 0 24 24" aria-hidden="true">
@@ -42,21 +18,21 @@ export default function WebsiteCheckForm() {
 					<path d="M3 12h18" />
 				</svg>
 				<input
-					ref={inputRef}
 					id="website-url"
 					name="website"
-					type="url"
+				value={website}
+					type="text"
 					inputMode="url"
-					placeholder="https://yourwebsite.com"
+					placeholder="yourwebsite.com"
 					autoComplete="url"
 					autoCapitalize="none"
 					spellCheck={false}
 					aria-describedby="url-hint"
-					onChange={handleChange}
+					onChange={(event) => setWebsite(event.currentTarget.value)}
 					required
 				/>
 			</section>
-			<button className={styles.button} type="submit">
+			<button className={styles.button} type="submit" disabled={pending}>
 				Check my website
 				<svg viewBox="0 0 24 24" aria-hidden="true">
 					<circle cx="10.5" cy="10.5" r="6.5" />
@@ -66,9 +42,6 @@ export default function WebsiteCheckForm() {
 			<p className={styles.hint} id="url-hint">
 				One link. No account needed.
 			</p>
-			<div role="status" aria-atomic="true">
-				{feedback && <p className={styles.feedback}>{feedback}</p>}
-			</div>
 		</form>
 	);
 }

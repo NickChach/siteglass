@@ -83,14 +83,6 @@
 	margin-top: 0.8rem;
 }
 
-.feedback {
-	margin-top: 1rem;
-	padding: 0.75rem;
-	background: var(--lilac);
-	border-radius: 0.3125rem;
-	font-size: 0.875rem;
-}
-
 @media (max-width: 26.875rem) {
 	.urlField {
 		gap: 0.45rem;
