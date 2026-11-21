@@ -1,29 +1,26 @@
 import { parse } from "parse5";
-import { getPublicPage, parseWebsiteUrl } from "./public-website";
 import type { PublicPage } from "./public-website";
+import { parseWebsiteUrl } from "./url";
+import { findWordPressApi } from "./wordpress-api";
+import type { GetJsonPage, WordPressApi } from "./wordpress-api";
 
-const SCAN_TIMEOUT_MS = 8_000;
 const REST_RELATION = "https://api.w.org/";
+const DIRECT_API_TIMEOUT_MS = 3_500;
 const linkHeaderEntry = /(?:^|,)\s*<([^<>\s]+)>((?:[^",<]|"(?:[^"\\]|\\.)*")*)/g;
 const linkHeaderParameter = /;\s*([^=;\s]+)\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^"\s;,]+))/g;
 
 type WordPressEvidence =
-	| "rest-api"
 	| "rest-discovery"
 	| "generator"
 	| "core-assets"
 	| "theme-or-plugin-assets"
 	| "uploads";
 
-export type WebsiteCheckResult =
-	| {
-		status: "detected" | "likely" | "not-detected";
-		evidence: WordPressEvidence[];
-	}
-	| {
-		status: "could-not-check";
-		reason: "invalid-url" | "rate-limited" | "page-unavailable";
-	};
+type WordPressSite = {
+	home: URL;
+	page: URL;
+	api?: WordPressApi;
+};
 
 function hasRestRelation(rel: string | undefined): boolean {
 	return rel?.split(/\s+/).includes(REST_RELATION) ?? false;
@@ -103,81 +100,30 @@ function inspectPage(page: PublicPage) {
 	return { restEndpoint, evidence };
 }
 
-function restCandidates(page: URL, discovered?: URL): URL[] {
-	const candidates = new Set<string>();
-	if (discovered) candidates.add(discovered.href);
-
-	const firstSegment = page.pathname.split("/")[1];
-	const bases = firstSegment ? ["/" + firstSegment + "/", "/"] : ["/"];
-	for (const base of bases) {
-		candidates.add(new URL(base + "wp-json/", page).href);
-		candidates.add(new URL(base + "?rest_route=/", page).href);
-	}
-
-	return Array.from(candidates, (candidate) => new URL(candidate));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function matchesRestIndex(response: PublicPage, page: URL): boolean {
-	if (response.status < 200 || response.status >= 300 || response.mediaType !== "application/json") {
-		return false;
-	}
-
-	let index: unknown;
-	try {
-		index = JSON.parse(response.body);
-	} catch {
-		return false;
-	}
-
-	if (!isRecord(index) || !Array.isArray(index.namespaces) || !index.namespaces.includes("wp/v2") ||
-		!isRecord(index.routes) || typeof index.home !== "string" ||
-		!Object.keys(index.routes).some((route) => route.startsWith("/wp/v2/"))) {
-		return false;
-	}
-
-	const home = parseWebsiteUrl(index.home);
-	if (!home || home.host !== page.host) return false;
-
-	const homePath = home.pathname.replace(/\/$/, "");
-	return page.pathname === homePath || page.pathname.startsWith(homePath + "/");
-}
-
 export async function detectWordPress(
 	address: URL,
-	getPage: typeof getPublicPage = getPublicPage,
-): Promise<WebsiteCheckResult> {
-	const signal = AbortSignal.timeout(SCAN_TIMEOUT_MS);
+	signal: AbortSignal,
+	getJson: GetJsonPage,
+	getHtml: (url: URL, signal: AbortSignal) => Promise<PublicPage>,
+): Promise<WordPressSite | undefined> {
+	const attempted = new Set<string>();
+	const directSignal = AbortSignal.any([signal, AbortSignal.timeout(DIRECT_API_TIMEOUT_MS)]);
+	const directApi = await findWordPressApi(address, getJson, directSignal, undefined, attempted);
+	if (directApi) return { api: directApi, home: directApi.home, page: address };
+
 	let page: PublicPage;
 	try {
-		page = await getPage(address, signal);
+		page = await getHtml(address, signal);
 	} catch {
-		return { status: "could-not-check", reason: "page-unavailable" };
+		return;
 	}
 
-	if (page.status < 200 || page.status >= 300 || !page.body.trim() ||
-		!["text/html", "application/xhtml+xml"].includes(page.mediaType)) {
-		return { status: "could-not-check", reason: "page-unavailable" };
+	if (signal.aborted) return;
+	const inspection = page.body.trim() ? inspectPage(page) : undefined;
+	const api = await findWordPressApi(page.url, getJson, signal, inspection?.restEndpoint, attempted);
+	if (api) return { api, home: api.home, page: page.url };
+	if (inspection) {
+		const supportingSignals = [...inspection.evidence].filter((evidence) => evidence !== "uploads");
+		if (supportingSignals.length >= 2) return { home: new URL(page.url.origin), page: page.url };
 	}
-
-	const { restEndpoint, evidence } = inspectPage(page);
-	for (const endpoint of restCandidates(page.url, restEndpoint)) {
-		if (signal.aborted) break;
-
-		try {
-			const response = await getPage(endpoint, signal, page.url.origin);
-			if (matchesRestIndex(response, page.url)) {
-				evidence.add("rest-api");
-				return { status: "detected", evidence: Array.from(evidence) };
-			}
-		} catch {
-			// A blocked or unavailable REST endpoint does not erase evidence from the page.
-		}
-	}
-
-	const supportingSignals = Array.from(evidence).filter((signal) => signal !== "uploads");
-	return { status: supportingSignals.length >= 2 ? "likely" : "not-detected", evidence: Array.from(evidence) };
 }

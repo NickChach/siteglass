@@ -7,12 +7,24 @@ import { get as httpsGet } from "node:https";
 import { BlockList, isIP } from "node:net";
 import { pipeline } from "node:stream/promises";
 import { createBrotliDecompress, createGunzip, createInflate } from "node:zlib";
+import { parseWebsiteUrl } from "./url";
 
-const MAX_URL_LENGTH = 2_048;
 const MAX_REDIRECTS = 3;
 const MAX_BODY_BYTES = 1024 * 1024;
 const FETCH_TIMEOUT_MS = 3_000;
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
+const mediaTypes = {
+	html: ["text/html", "application/xhtml+xml"],
+	json: ["application/json"],
+	robots: ["text/plain"],
+	sitemap: ["application/xml", "text/xml", "text/plain", "application/gzip", "application/x-gzip", "application/octet-stream"],
+};
+
+type PageOptions = {
+	format: keyof typeof mediaTypes;
+	allowedOrigin?: string;
+	takeRequest?: () => void;
+};
 
 // IANA special-purpose ranges that are unsuitable destinations, plus multicast.
 const blockedAddresses = new BlockList();
@@ -57,32 +69,9 @@ export type PublicPage = {
 	status: number;
 	mediaType: string;
 	link: string | undefined;
+	totalPages: string | null;
 	body: string;
 };
-
-export function parseWebsiteUrl(value: string, base?: URL): URL | undefined {
-	if (value.length > MAX_URL_LENGTH) return;
-
-	let url: URL;
-	try {
-		url = new URL(value, base);
-	} catch {
-		return;
-	}
-
-	if (
-		(url.protocol !== "http:" && url.protocol !== "https:") ||
-		url.username ||
-		url.password ||
-		url.port ||
-		url.href.length > MAX_URL_LENGTH
-	) {
-		return;
-	}
-
-	url.hash = "";
-	return url;
-}
 
 function isPublicAddress({ address, family }: Address): boolean {
 	if (isIP(address) !== family || address.includes("%")) return false;
@@ -137,7 +126,7 @@ async function resolvePublicAddress(url: URL, signal: AbortSignal): Promise<Addr
 	return addresses[0];
 }
 
-function requestPage(url: URL, destination: Address, signal: AbortSignal): Promise<IncomingMessage> {
+function requestPage(url: URL, destination: Address, accept: string, signal: AbortSignal): Promise<IncomingMessage> {
 	const get = url.protocol === "https:" ? httpsGet : httpGet;
 
 	return new Promise((resolve, reject) => {
@@ -155,7 +144,7 @@ function requestPage(url: URL, destination: Address, signal: AbortSignal): Promi
 				callback(null, destination.address, destination.family);
 			},
 			headers: {
-				accept: "text/html, application/xhtml+xml, application/json",
+				accept,
 				"accept-encoding": "gzip, deflate, br",
 				"user-agent": "Siteglass/0.1",
 			},
@@ -181,8 +170,11 @@ async function collectBody(source: AsyncIterable<Buffer>): Promise<string> {
 	return Buffer.concat(chunks).toString("utf8");
 }
 
-async function readBody(response: IncomingMessage, signal: AbortSignal): Promise<string> {
+async function readBody(response: IncomingMessage, signal: AbortSignal, gzipFile: boolean): Promise<string> {
 	const encoding = response.headers["content-encoding"]?.trim().toLowerCase();
+	if (gzipFile && (!encoding || encoding === "identity")) {
+		return pipeline(response, limitBody, createGunzip(), collectBody, { signal });
+	}
 	switch (encoding) {
 		case undefined:
 		case "identity":
@@ -201,35 +193,43 @@ async function readBody(response: IncomingMessage, signal: AbortSignal): Promise
 export async function getPublicPage(
 	address: URL,
 	scanSignal: AbortSignal,
-	allowedOrigin?: string,
+	{ format, allowedOrigin, takeRequest }: PageOptions,
 ): Promise<PublicPage> {
 	const signal = AbortSignal.any([scanSignal, AbortSignal.timeout(FETCH_TIMEOUT_MS)]);
+	const acceptedTypes = mediaTypes[format];
 	let url = parseWebsiteUrl(address.href);
 
 	for (let redirects = 0; url && redirects <= MAX_REDIRECTS; redirects++) {
 		if (allowedOrigin && url.origin !== allowedOrigin) break;
+		takeRequest?.();
 
 		const destination = await resolvePublicAddress(url, signal);
-		const response = await requestPage(url, destination, signal);
+		const response = await requestPage(url, destination, acceptedTypes.join(", "), signal);
 
 		try {
 			const status = response.statusCode ?? 0;
 			if (redirectStatuses.has(status) && response.headers.location) {
-				url = parseWebsiteUrl(response.headers.location, url);
+				const next = parseWebsiteUrl(response.headers.location, url);
+				if (url.protocol === "https:" && next?.protocol === "http:") break;
+				url = next;
 				continue;
 			}
 
 			const mediaType = response.headers["content-type"]?.split(";", 1)[0].trim().toLowerCase() ?? "";
 			const link = response.headers.link;
-			const isReadable = status >= 200 && status < 300 &&
-				["text/html", "application/xhtml+xml", "application/json"].includes(mediaType);
+			const isReadable = acceptedTypes.includes(mediaType) &&
+				((status >= 200 && status < 300) || (format === "json" && status === 400));
+			const gzipFile = format === "sitemap" &&
+				(mediaType === "application/gzip" || mediaType === "application/x-gzip" || url.pathname.endsWith(".gz"));
+			const totalPages = response.headers["x-wp-totalpages"];
 
 			return {
 				url,
 				status,
 				mediaType,
 				link: Array.isArray(link) ? link.join(", ") : link,
-				body: isReadable ? await readBody(response, signal) : "",
+				totalPages: typeof totalPages === "string" ? totalPages : null,
+				body: isReadable ? await readBody(response, signal, gzipFile) : "",
 			};
 		} finally {
 			response.destroy();

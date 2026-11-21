@@ -2,11 +2,20 @@
 
 import { useActionState, useState } from "react";
 import { checkWebsite } from "@/app/actions/check-website";
+import { scanWebsiteInBrowser } from "@/lib/website-check/browser-scan";
+import type { WebsiteCheckResult } from "@/lib/website-check/post-urls";
+import { parseScanAddress } from "@/lib/website-check/url";
 import styles from "./website-check-form.module.css";
+
+async function scanWebsite(_previousResult: WebsiteCheckResult | null, formData: FormData): Promise<WebsiteCheckResult> {
+	const url = parseScanAddress(formData.get("website"));
+	if (!url) return { status: "could-not-check", reason: "invalid-url" };
+	return await scanWebsiteInBrowser(url) ?? checkWebsite(formData);
+}
 
 export default function WebsiteCheckForm() {
 	const [website, setWebsite] = useState("");
-	const [, submitWebsite, pending] = useActionState(checkWebsite, null);
+	const [, submitWebsite, pending] = useActionState(scanWebsite, null);
 
 	return (
 		<form id="website-check" className={styles.form} action={submitWebsite} aria-busy={pending}>

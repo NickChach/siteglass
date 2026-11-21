@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+	headers() {
+		return [{
+			source: "/",
+			headers: [{
+				key: "Permissions-Policy",
+				value: "local-network=(), loopback-network=(), local-network-access=()",
+			}],
+		}];
+	},
 };
 
 export default nextConfig;
