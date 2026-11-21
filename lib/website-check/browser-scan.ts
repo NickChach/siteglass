@@ -1,3 +1,4 @@
+import { isReadableJsonResponse, responseMediaType } from "./json-response";
 import { checkApiPostUrls, findWordPressApi, MAX_RESPONSE_BYTES } from "./wordpress-api";
 import type { PostUrlScan } from "./post-urls";
 
@@ -56,8 +57,8 @@ export async function scanWebsiteInBrowser(address: URL): Promise<PostUrlScan | 
 			referrerPolicy: "no-referrer",
 			signal: AbortSignal.any([scanSignal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
 		});
-		const mediaType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() ?? "";
-		const readable = mediaType === "application/json" && (response.ok || response.status === 400);
+		const mediaType = responseMediaType(response.headers.get("content-type"));
+		const readable = isReadableJsonResponse(mediaType, response.status);
 		if (!readable) await response.body?.cancel();
 		return {
 			url,

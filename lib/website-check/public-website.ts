@@ -7,6 +7,7 @@ import { get as httpsGet } from "node:https";
 import { BlockList, isIP } from "node:net";
 import { pipeline } from "node:stream/promises";
 import { createBrotliDecompress, createGunzip, createInflate } from "node:zlib";
+import { isReadableJsonResponse, JSON_MEDIA_TYPE, responseMediaType } from "./json-response";
 import { parseWebsiteUrl } from "./url";
 
 const MAX_REDIRECTS = 3;
@@ -15,7 +16,7 @@ const FETCH_TIMEOUT_MS = 3_000;
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
 const mediaTypes = {
 	html: ["text/html", "application/xhtml+xml"],
-	json: ["application/json"],
+	json: [JSON_MEDIA_TYPE],
 	robots: ["text/plain"],
 	sitemap: ["application/xml", "text/xml", "text/plain", "application/gzip", "application/x-gzip", "application/octet-stream"],
 };
@@ -215,10 +216,11 @@ export async function getPublicPage(
 				continue;
 			}
 
-			const mediaType = response.headers["content-type"]?.split(";", 1)[0].trim().toLowerCase() ?? "";
+			const mediaType = responseMediaType(response.headers["content-type"]);
 			const link = response.headers.link;
-			const isReadable = acceptedTypes.includes(mediaType) &&
-				((status >= 200 && status < 300) || (format === "json" && status === 400));
+			const isReadable = format === "json"
+				? isReadableJsonResponse(mediaType, status)
+				: acceptedTypes.includes(mediaType) && status >= 200 && status < 300;
 			const gzipFile = format === "sitemap" &&
 				(mediaType === "application/gzip" || mediaType === "application/x-gzip" || url.pathname.endsWith(".gz"));
 			const totalPages = response.headers["x-wp-totalpages"];

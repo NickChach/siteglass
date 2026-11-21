@@ -1,3 +1,4 @@
+import { JSON_MEDIA_TYPE } from "./json-response";
 import { createPostUrlCheck } from "./post-urls";
 import type { PostUrlScan } from "./post-urls";
 import { isWithinSite, parseWebsiteUrl } from "./url";
@@ -42,7 +43,7 @@ function apiCandidates(page: URL, discovered?: URL): URL[] {
 }
 
 function jsonFrom(page: JsonPage): unknown {
-	if (page.mediaType !== "application/json") return;
+	if (page.mediaType !== JSON_MEDIA_TYPE) return;
 	try {
 		return JSON.parse(page.body);
 	} catch {

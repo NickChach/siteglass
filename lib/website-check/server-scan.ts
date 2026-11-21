@@ -25,7 +25,14 @@ export async function scanWebsiteOnServer(address: URL): Promise<WebsiteCheckRes
 	if (!site) return { status: "could-not-check", reason: "wordpress-unconfirmed" };
 	const apiResult = site.api && await checkApiPostUrls(site.api, getJson, signal);
 	if (apiResult) return apiResult;
-	return await checkPostSitemaps(site.home, site.page, signal, getPage) ?? {
+	const allowedOrigin = site.home.origin;
+	return await checkPostSitemaps(site.home, site.page, signal, {
+		async getRobots(url) {
+			const page = await getPage(url, signal, { format: "robots", allowedOrigin });
+			return page.body;
+		},
+		getSitemap: (url) => getPage(url, signal, { format: "sitemap", allowedOrigin }),
+	}) ?? {
 		status: "could-not-check", reason: "post-urls-unavailable",
 	};
 }

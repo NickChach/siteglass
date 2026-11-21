@@ -1,18 +1,12 @@
+import { matchPostPath, type MatchedTerm } from "./post-path";
 import { isWithinSite, parseWebsiteUrl, sitePath } from "./url";
 
 const MAX_REPORTED_MATCHES = 50;
 export const MAX_POST_URLS = 1_000;
 
-const keywords = {
-	adult: ["porn", "pornography", "adult video", "adult videos"],
-	cryptocurrency: ["crypto", "cryptocurrency", "cryptocurrencies", "bitcoin"],
-	gambling: ["casino", "casinos", "online casino", "sports betting", "slot machine", "slot machines"],
-} as const;
-
-type Category = keyof typeof keywords;
 type PostUrlMatch = {
 	url: string;
-	terms: { category: Category; keyword: string }[];
+	terms: MatchedTerm[];
 };
 
 export type PostUrlScan = {
@@ -28,8 +22,6 @@ export type WebsiteCheckResult = PostUrlScan | {
 	status: "could-not-check";
 	reason: "invalid-url" | "rate-limited" | "wordpress-unconfirmed" | "post-urls-unavailable";
 };
-
-const categories = Object.keys(keywords) as Category[];
 
 export function createPostUrlCheck(home: URL, source: PostUrlScan["source"]) {
 	const checked = new Set<string>();
@@ -58,10 +50,7 @@ export function createPostUrlCheck(home: URL, source: PostUrlScan["source"]) {
 				return;
 			}
 			checked.add(url.href);
-			const words = " " + path.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, " ").trim() + " ";
-			const terms = categories.flatMap((category) => keywords[category]
-				.filter((keyword) => words.includes(" " + keyword + " "))
-				.map((keyword) => ({ category, keyword })));
+			const terms = matchPostPath(path);
 			if (!terms.length) return;
 
 			matchedUrls++;

@@ -2,11 +2,15 @@ import "server-only";
 
 import { createPostUrlCheck } from "./post-urls";
 import type { PostUrlScan } from "./post-urls";
-import type { getPublicPage } from "./public-website";
 import { parseSitemap } from "./sitemap-xml";
 import { parseWebsiteUrl, sitePath } from "./url";
 
 const MAX_SITEMAP_FILES = 8;
+
+type SitemapReaders = {
+	getRobots(url: URL): Promise<string>;
+	getSitemap(url: URL): Promise<{ url: URL; body: string }>;
+};
 
 function isPostSitemap(url: URL): boolean {
 	return /\/(?:wp-sitemap-posts-post-\d+|post-sitemap\d*)\.xml(?:\.gz)?$/i.test(url.pathname) ||
@@ -17,13 +21,13 @@ export async function checkPostSitemaps(
 	home: URL,
 	page: URL,
 	signal: AbortSignal,
-	getPage: typeof getPublicPage,
+	{ getRobots, getSitemap }: SitemapReaders,
 ): Promise<PostUrlScan | undefined> {
 	const advertised = new Set<string>();
 	let incomplete = false;
 	try {
-		const robots = await getPage(new URL("/robots.txt", home), signal, { format: "robots", allowedOrigin: home.origin });
-		for (const [, value] of robots.body.matchAll(/^[ \t]*Sitemap:[ \t]*(\S+)/gim)) {
+		const robots = await getRobots(new URL("/robots.txt", home));
+		for (const [, value] of robots.matchAll(/^[ \t]*Sitemap:[ \t]*(\S+)/gim)) {
 			const url = parseWebsiteUrl(value);
 			if (!url || url.origin !== home.origin) {
 				incomplete = true;
@@ -60,7 +64,7 @@ export async function checkPostSitemaps(
 		if (signal.aborted || visited.size >= MAX_SITEMAP_FILES || visited.has(url.href)) return;
 		visited.add(url.href);
 		try {
-			const response = await getPage(url, signal, { format: "sitemap", allowedOrigin: home.origin });
+			const response = await getSitemap(url);
 			const xml = parseSitemap(response.body);
 			if (xml) return { ...xml, url: response.url };
 		} catch {
