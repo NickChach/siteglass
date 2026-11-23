@@ -1,5 +1,4 @@
 import { parse } from "parse5";
-import type { PublicPage } from "./public-website";
 import { parseWebsiteUrl } from "./url";
 import { findWordPressApi } from "./wordpress-api";
 import type { GetJsonPage, WordPressApi } from "./wordpress-api";
@@ -23,7 +22,18 @@ type WordPressSite = {
 	api?: WordPressApi;
 };
 
-type GetAdminPage = (url: URL, signal: AbortSignal) => Promise<Pick<PublicPage, "status" | "location">>;
+export type WordPressHtmlPage = {
+	url: URL;
+	body: string;
+	link?: string;
+};
+
+type AdminPage = {
+	status: number;
+	location?: string;
+};
+
+type GetAdminPage = (url: URL, signal: AbortSignal) => Promise<AdminPage>;
 
 function hasRestRelation(rel: string | undefined): boolean {
 	return rel?.split(/\s+/).includes(REST_RELATION) ?? false;
@@ -40,7 +50,7 @@ function* restLinksFromHeader(header: string | undefined) {
 	}
 }
 
-function inspectPage(page: PublicPage) {
+function inspectPage(page: WordPressHtmlPage) {
 	const document = parse(page.body);
 	const html = document.childNodes.find((node) => "tagName" in node && node.tagName === "html");
 	const head = html && "childNodes" in html
@@ -130,7 +140,7 @@ export async function detectWordPress(
 	address: URL,
 	signal: AbortSignal,
 	getJson: GetJsonPage,
-	getHtml: (url: URL, signal: AbortSignal) => Promise<PublicPage>,
+	getHtml: (url: URL, signal: AbortSignal) => Promise<WordPressHtmlPage>,
 	getAdminPage: GetAdminPage,
 ): Promise<WordPressSite | undefined> {
 	const attempted = new Set<string>();
@@ -138,7 +148,7 @@ export async function detectWordPress(
 	const directApi = await findWordPressApi(address, getJson, directSignal, undefined, attempted);
 	if (directApi) return { api: directApi, home: directApi.home, page: address };
 
-	let page: PublicPage;
+	let page: WordPressHtmlPage;
 	try {
 		page = await getHtml(address, signal);
 	} catch {

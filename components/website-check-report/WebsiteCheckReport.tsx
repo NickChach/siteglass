@@ -1,12 +1,7 @@
 import { useEffect, useRef } from "react";
-import type { PostUrlScan, WebsiteCheckResult } from "@/lib/website-check/post-urls";
+import type { PostUrlScan, WebsiteCheckOutcome } from "@/lib/website-check/post-urls";
 import type { MatchedTerm } from "@/lib/website-check/post-path";
 import styles from "./website-check-report.module.css";
-
-export type WebsiteCheckOutcome = WebsiteCheckResult | {
-	status: "could-not-check";
-	reason: "scan-unavailable";
-};
 
 type WebsiteCheckReportProps = {
 	result: WebsiteCheckOutcome | null;

@@ -3,9 +3,9 @@
 import { useActionState, useState } from "react";
 import { checkWebsite } from "@/app/actions/check-website";
 import { scanWebsiteInBrowser } from "@/lib/website-check/browser-scan";
+import type { WebsiteCheckOutcome } from "@/lib/website-check/post-urls";
 import { parseScanAddress } from "@/lib/website-check/url";
 import WebsiteCheckReport from "@/components/website-check-report/WebsiteCheckReport";
-import type { WebsiteCheckOutcome } from "@/components/website-check-report/WebsiteCheckReport";
 import styles from "./website-check-form.module.css";
 
 async function scanWebsite(_previousResult: WebsiteCheckOutcome | null, formData: FormData): Promise<WebsiteCheckOutcome> {

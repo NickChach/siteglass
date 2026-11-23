@@ -23,6 +23,11 @@ export type WebsiteCheckResult = PostUrlScan | {
 	reason: "invalid-url" | "rate-limited" | "wordpress-unconfirmed" | "post-urls-unavailable";
 };
 
+export type WebsiteCheckOutcome = WebsiteCheckResult | {
+	status: "could-not-check";
+	reason: "scan-unavailable";
+};
+
 export function createPostUrlCheck(home: URL, source: PostUrlScan["source"]) {
 	const checked = new Set<string>();
 	const matches: PostUrlMatch[] = [];

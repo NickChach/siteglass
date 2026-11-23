@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { detectWordPress } from "../lib/website-check/wordpress";
-import type { PublicPage } from "../lib/website-check/public-website";
+import type { WordPressHtmlPage } from "../lib/website-check/wordpress";
 import type { GetJsonPage } from "../lib/website-check/wordpress-api";
 
 const site = new URL("https://example.com/");
@@ -12,8 +12,8 @@ const unavailableApi: GetJsonPage = async (url) => ({
 	url, status: 404, mediaType: "text/html", body: "", totalPages: null,
 });
 
-function htmlPage(url: URL, body: string): PublicPage {
-	return { url, status: 200, mediaType: "text/html", link: undefined, totalPages: null, body };
+function htmlPage(url: URL, body: string): WordPressHtmlPage {
+	return { url, body };
 }
 
 test("a WordPress login redirect corroborates a theme on a WordPress.com page", async () => {

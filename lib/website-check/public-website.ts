@@ -2,12 +2,12 @@ import "server-only";
 
 import { Resolver } from "node:dns/promises";
 import { get as httpGet } from "node:http";
-import type { IncomingMessage } from "node:http";
+import type { IncomingHttpHeaders, IncomingMessage } from "node:http";
 import { get as httpsGet } from "node:https";
 import { BlockList, isIP } from "node:net";
 import { pipeline } from "node:stream/promises";
 import { createBrotliDecompress, createGunzip, createInflate } from "node:zlib";
-import { isReadableJsonResponse, JSON_MEDIA_TYPE, responseMediaType } from "./json-response";
+import { JSON_MEDIA_TYPE, responseMediaType } from "./json-response";
 import { parseWebsiteUrl } from "./url";
 
 const MAX_REDIRECTS = 3;
@@ -26,6 +26,7 @@ type PageOptions = {
 	allowedOrigin?: string;
 	redirect?: "manual";
 	headersOnly?: boolean;
+	acceptBodyStatus?: (status: number) => boolean;
 	takeRequest?: () => void;
 };
 
@@ -67,13 +68,11 @@ type Address = {
 	family: 4 | 6;
 };
 
-export type PublicPage = {
+type PublicPage = {
 	url: URL;
 	status: number;
-	location?: string;
 	mediaType: string;
-	link: string | undefined;
-	totalPages: string | null;
+	headers: IncomingHttpHeaders;
 	body: string;
 };
 
@@ -197,7 +196,7 @@ async function readBody(response: IncomingMessage, signal: AbortSignal, gzipFile
 export async function getPublicPage(
 	address: URL,
 	scanSignal: AbortSignal,
-	{ format, allowedOrigin, redirect, headersOnly, takeRequest }: PageOptions,
+	{ format, allowedOrigin, redirect, headersOnly, acceptBodyStatus, takeRequest }: PageOptions,
 ): Promise<PublicPage> {
 	const signal = AbortSignal.any([scanSignal, AbortSignal.timeout(FETCH_TIMEOUT_MS)]);
 	const acceptedTypes = mediaTypes[format];
@@ -220,22 +219,17 @@ export async function getPublicPage(
 			}
 
 			const mediaType = responseMediaType(response.headers["content-type"]);
-			const link = response.headers.link;
-			const isReadable = format === "json"
-				? isReadableJsonResponse(mediaType, status)
-				: acceptedTypes.includes(mediaType) && status >= 200 && status < 300;
+			const isReadable = !headersOnly && acceptedTypes.includes(mediaType) &&
+				(acceptBodyStatus?.(status) ?? (status >= 200 && status < 300));
 			const gzipFile = format === "sitemap" &&
 				(mediaType === "application/gzip" || mediaType === "application/x-gzip" || url.pathname.endsWith(".gz"));
-			const totalPages = response.headers["x-wp-totalpages"];
 
 			return {
 				url,
 				status,
-				location: response.headers.location,
 				mediaType,
-				link: Array.isArray(link) ? link.join(", ") : link,
-				totalPages: typeof totalPages === "string" ? totalPages : null,
-				body: isReadable && !headersOnly ? await readBody(response, signal, gzipFile) : "",
+				headers: response.headers,
+				body: isReadable ? await readBody(response, signal, gzipFile) : "",
 			};
 		} finally {
 			response.destroy();

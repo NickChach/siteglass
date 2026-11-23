@@ -7,6 +7,7 @@ const POSTS_PER_PAGE = 100;
 const MAX_POST_PAGES = 10;
 const POST_ROUTE = "/wp/v2/posts";
 export const MAX_RESPONSE_BYTES = 1024 * 1024;
+export const WORDPRESS_TOTAL_PAGES_HEADER = "x-wp-totalpages";
 
 type JsonPage = {
 	url: URL;
@@ -22,6 +23,11 @@ export type WordPressApi = {
 	index: URL;
 	home: URL;
 };
+
+export function isReadableWordPressJsonStatus(status: number): boolean {
+	// WordPress can report the end of pagination in a JSON error body.
+	return (status >= 200 && status < 300) || status === 400;
+}
 
 function apiCandidates(page: URL, discovered?: URL): URL[] {
 	const candidates = new Set<string>();

@@ -1,5 +1,11 @@
-import { isReadableJsonResponse, responseMediaType } from "./json-response";
-import { checkApiPostUrls, findWordPressApi, MAX_RESPONSE_BYTES } from "./wordpress-api";
+import { JSON_MEDIA_TYPE, responseMediaType } from "./json-response";
+import {
+	checkApiPostUrls,
+	findWordPressApi,
+	isReadableWordPressJsonStatus,
+	MAX_RESPONSE_BYTES,
+	WORDPRESS_TOTAL_PAGES_HEADER,
+} from "./wordpress-api";
 import type { PostUrlScan } from "./post-urls";
 
 const BROWSER_SCAN_TIMEOUT_MS = 8_000;
@@ -58,13 +64,13 @@ export async function scanWebsiteInBrowser(address: URL): Promise<PostUrlScan | 
 			signal: AbortSignal.any([scanSignal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
 		});
 		const mediaType = responseMediaType(response.headers.get("content-type"));
-		const readable = isReadableJsonResponse(mediaType, response.status);
+		const readable = mediaType === JSON_MEDIA_TYPE && isReadableWordPressJsonStatus(response.status);
 		if (!readable) await response.body?.cancel();
 		return {
 			url,
 			status: response.status,
 			mediaType,
-			totalPages: response.headers.get("x-wp-totalpages"),
+			totalPages: response.headers.get(WORDPRESS_TOTAL_PAGES_HEADER),
 			body: readable && response.body ? await readJsonBody(response.body) : "",
 		};
 	}
