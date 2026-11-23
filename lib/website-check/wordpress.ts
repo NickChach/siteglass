@@ -6,6 +6,7 @@ import type { GetJsonPage, WordPressApi } from "./wordpress-api";
 
 const REST_RELATION = "https://api.w.org/";
 const DIRECT_API_TIMEOUT_MS = 3_500;
+const adminRedirectStatuses = new Set([301, 302, 303, 307, 308]);
 const linkHeaderEntry = /(?:^|,)\s*<([^<>\s]+)>((?:[^",<]|"(?:[^"\\]|\\.)*")*)/g;
 const linkHeaderParameter = /;\s*([^=;\s]+)\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^"\s;,]+))/g;
 
@@ -21,6 +22,8 @@ type WordPressSite = {
 	page: URL;
 	api?: WordPressApi;
 };
+
+type GetAdminPage = (url: URL, signal: AbortSignal) => Promise<Pick<PublicPage, "status" | "location">>;
 
 function hasRestRelation(rel: string | undefined): boolean {
 	return rel?.split(/\s+/).includes(REST_RELATION) ?? false;
@@ -100,11 +103,35 @@ function inspectPage(page: PublicPage) {
 	return { restEndpoint, evidence };
 }
 
+async function findWordPressAdmin(page: URL, signal: AbortSignal, getAdminPage: GetAdminPage): Promise<URL | undefined> {
+	const bases = new Set<string>();
+	const firstSegment = page.pathname.split("/")[1];
+	if (firstSegment) bases.add(`/${firstSegment}/`);
+	bases.add("/");
+
+	for (const base of bases) {
+		if (signal.aborted) break;
+		const home = new URL(page.origin);
+		home.pathname = base;
+		const admin = new URL("wp-admin/", home);
+
+		try {
+			const response = await getAdminPage(admin, signal);
+			if (!adminRedirectStatuses.has(response.status) || !response.location) continue;
+			const login = parseWebsiteUrl(response.location, admin);
+			if (login?.origin === home.origin && login.pathname === new URL("wp-login.php", home).pathname) return home;
+		} catch {
+			// An unavailable admin page is not evidence either way.
+		}
+	}
+}
+
 export async function detectWordPress(
 	address: URL,
 	signal: AbortSignal,
 	getJson: GetJsonPage,
 	getHtml: (url: URL, signal: AbortSignal) => Promise<PublicPage>,
+	getAdminPage: GetAdminPage,
 ): Promise<WordPressSite | undefined> {
 	const attempted = new Set<string>();
 	const directSignal = AbortSignal.any([signal, AbortSignal.timeout(DIRECT_API_TIMEOUT_MS)]);
@@ -125,5 +152,9 @@ export async function detectWordPress(
 	if (inspection) {
 		const supportingSignals = [...inspection.evidence].filter((evidence) => evidence !== "uploads");
 		if (supportingSignals.length >= 2) return { home: new URL(page.url.origin), page: page.url };
+		if (supportingSignals.length === 1) {
+			const home = await findWordPressAdmin(page.url, signal, getAdminPage);
+			if (home) return { home, page: page.url };
+		}
 	}
 }

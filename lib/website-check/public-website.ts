@@ -24,6 +24,8 @@ const mediaTypes = {
 type PageOptions = {
 	format: keyof typeof mediaTypes;
 	allowedOrigin?: string;
+	redirect?: "manual";
+	headersOnly?: boolean;
 	takeRequest?: () => void;
 };
 
@@ -68,6 +70,7 @@ type Address = {
 export type PublicPage = {
 	url: URL;
 	status: number;
+	location?: string;
 	mediaType: string;
 	link: string | undefined;
 	totalPages: string | null;
@@ -194,7 +197,7 @@ async function readBody(response: IncomingMessage, signal: AbortSignal, gzipFile
 export async function getPublicPage(
 	address: URL,
 	scanSignal: AbortSignal,
-	{ format, allowedOrigin, takeRequest }: PageOptions,
+	{ format, allowedOrigin, redirect, headersOnly, takeRequest }: PageOptions,
 ): Promise<PublicPage> {
 	const signal = AbortSignal.any([scanSignal, AbortSignal.timeout(FETCH_TIMEOUT_MS)]);
 	const acceptedTypes = mediaTypes[format];
@@ -209,7 +212,7 @@ export async function getPublicPage(
 
 		try {
 			const status = response.statusCode ?? 0;
-			if (redirectStatuses.has(status) && response.headers.location) {
+			if (redirect !== "manual" && redirectStatuses.has(status) && response.headers.location) {
 				const next = parseWebsiteUrl(response.headers.location, url);
 				if (url.protocol === "https:" && next?.protocol === "http:") break;
 				url = next;
@@ -228,10 +231,11 @@ export async function getPublicPage(
 			return {
 				url,
 				status,
+				location: response.headers.location,
 				mediaType,
 				link: Array.isArray(link) ? link.join(", ") : link,
 				totalPages: typeof totalPages === "string" ? totalPages : null,
-				body: isReadable ? await readBody(response, signal, gzipFile) : "",
+				body: isReadable && !headersOnly ? await readBody(response, signal, gzipFile) : "",
 			};
 		} finally {
 			response.destroy();

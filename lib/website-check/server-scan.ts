@@ -21,7 +21,15 @@ export async function scanWebsiteOnServer(address: URL): Promise<WebsiteCheckRes
 		},
 	});
 	const getJson: GetJsonPage = (url, scanSignal) => getPage(url, scanSignal, { format: "json", allowedOrigin: url.origin });
-	const site = await detectWordPress(address, signal, getJson, (url, scanSignal) => getPage(url, scanSignal, { format: "html" }));
+	const site = await detectWordPress(
+		address,
+		signal,
+		getJson,
+		(url, scanSignal) => getPage(url, scanSignal, { format: "html" }),
+		(url, scanSignal) => getPage(url, scanSignal, {
+			format: "html", allowedOrigin: url.origin, redirect: "manual", headersOnly: true,
+		}),
+	);
 	if (!site) return { status: "could-not-check", reason: "wordpress-unconfirmed" };
 	const apiResult = site.api && await checkApiPostUrls(site.api, getJson, signal);
 	if (apiResult) return apiResult;
