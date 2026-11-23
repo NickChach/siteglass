@@ -26,19 +26,26 @@ export default function HowItWorks() {
 				<span>One address. </span>
 				<span>Two useful checks.</span>
 			</h2>
-			<ol className={styles.steps} role="list">
-				{steps.map((step, index) => (
-					<li key={step.id}>
-						<span className={styles.number} aria-hidden="true">
-							{index + 1}
-						</span>
-						<div>
-							<h3>{step.title}</h3>
-							<p>{step.description}</p>
-						</div>
-					</li>
-				))}
-			</ol>
+			<div className={styles.details}>
+				<ol className={styles.steps} role="list">
+					{steps.map((step, index) => (
+						<li key={step.id}>
+							<span className={styles.number} aria-hidden="true">
+								{index + 1}
+							</span>
+							<div>
+								<h3>{step.title}</h3>
+								<p>{step.description}</p>
+							</div>
+						</li>
+					))}
+				</ol>
+				<p className={styles.explanation}>
+					Siteglass checks your public WordPress post URLs for terms related to gambling, cryptocurrency,
+					or adult content. If those topics are unrelated to your site, they can be a sign of SEO poisoning,
+					where someone publishes spam on your site to attract visitors from search results.
+				</p>
+			</div>
 		</article>
 	);
 }

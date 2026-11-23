@@ -18,6 +18,11 @@
 	display: block;
 }
 
+.details {
+	--step-marker-size: 1.6rem;
+	--step-marker-gap: 0.9rem;
+}
+
 .steps {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -30,15 +35,15 @@
 .steps li {
 	display: flex;
 	align-items: start;
-	gap: 0.9rem;
+	gap: var(--step-marker-gap);
 }
 
 .number {
 	flex-shrink: 0;
 	display: grid;
 	place-items: center;
-	width: 1.6rem;
-	height: 1.6rem;
+	width: var(--step-marker-size);
+	height: var(--step-marker-size);
 	border: 0.0625rem solid #2d42cd5c;
 	border-radius: 50%;
 	font-size: 0.85rem;
@@ -51,12 +56,22 @@
 	font-weight: 400;
 }
 
-.steps p {
+.steps p,
+.explanation {
 	color: var(--muted);
 	font-size: 0.9rem;
 	line-height: 1.65;
+}
+
+.steps p {
 	max-width: 21rem;
 	margin-top: 0.55rem;
+}
+
+.explanation {
+	max-width: 100%;
+	margin-block-start: 1.25rem;
+	margin-inline-start: calc(var(--step-marker-size) + var(--step-marker-gap));
 }
 
 @media (max-width: 68.75rem) {
@@ -79,6 +94,11 @@
 
 	.steps {
 		gap: 1.75rem;
+	}
+
+	.explanation {
+		margin-block-start: 1.75rem;
+		margin-inline-start: 0;
 	}
 }
 
