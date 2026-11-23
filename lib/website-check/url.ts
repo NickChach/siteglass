@@ -23,7 +23,10 @@ export function parseScanAddress(value: unknown): URL | undefined {
 	if (typeof value !== "string" || value.length > MAX_URL_LENGTH) return;
 	const address = value.trim();
 	if (!address) return;
-	return parseWebsiteUrl(/^https?:\/\//i.test(address) ? address : "https://" + address);
+	const url = parseWebsiteUrl(/^https?:\/\//i.test(address) ? address : "https://" + address);
+	if (!url) return;
+	url.hostname = url.hostname.replace(/^www\.(?=.)/, "");
+	return new URL(url.origin);
 }
 
 export function sitePath(url: URL): string {

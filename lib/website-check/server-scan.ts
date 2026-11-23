@@ -55,7 +55,7 @@ export async function scanWebsiteOnServer(address: URL): Promise<WebsiteCheckRes
 	const apiResult = site.api && await checkApiPostUrls(site.api, getJson, signal);
 	if (apiResult) return apiResult;
 	const allowedOrigin = site.home.origin;
-	return await checkPostSitemaps(site.home, site.page, signal, {
+	return await checkPostSitemaps(site.home, signal, {
 		async getRobots(url) {
 			const page = await getPage(url, signal, { format: "robots", allowedOrigin });
 			return page.body;

@@ -1,7 +1,7 @@
 import { JSON_MEDIA_TYPE } from "./json-response";
 import { createPostUrlCheck } from "./post-urls";
 import type { PostUrlScan } from "./post-urls";
-import { isWithinSite, parseWebsiteUrl } from "./url";
+import { parseWebsiteUrl } from "./url";
 
 const POSTS_PER_PAGE = 100;
 const MAX_POST_PAGES = 10;
@@ -33,18 +33,8 @@ function apiCandidates(page: URL, discovered?: URL): URL[] {
 	const candidates = new Set<string>();
 	if (discovered?.origin === page.origin) candidates.add(discovered.href);
 
-	const firstSegment = page.pathname.split("/")[1];
-	const bases = new Set([page.pathname.slice(0, page.pathname.lastIndexOf("/") + 1)]);
-	if (firstSegment) bases.add(`/${firstSegment}/`);
-	bases.add("/");
-	for (const base of bases) {
-		const root = new URL(page.origin);
-		root.pathname = base + "wp-json/";
-		candidates.add(root.href);
-		root.pathname = base;
-		root.search = "?rest_route=/";
-		candidates.add(root.href);
-	}
+	candidates.add(new URL("/wp-json/", page.origin).href);
+	candidates.add(new URL("/?rest_route=/", page.origin).href);
 	return [...candidates].map((url) => new URL(url));
 }
 
@@ -81,7 +71,7 @@ export async function findWordPressApi(
 				!isRecord(index.routes) || !Object.keys(index.routes).some((route) => route.startsWith("/wp/v2/")) ||
 				typeof index.home !== "string") continue;
 			const home = parseWebsiteUrl(index.home);
-			if (!home || !isWithinSite(page, home)) continue;
+			if (!home || home.origin !== page.origin || home.pathname !== "/") continue;
 			home.search = "";
 			return { index: response.url, home };
 		} catch {

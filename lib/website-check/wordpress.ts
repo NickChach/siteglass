@@ -18,7 +18,6 @@ type WordPressEvidence =
 
 type WordPressSite = {
 	home: URL;
-	page: URL;
 	api?: WordPressApi;
 };
 
@@ -113,26 +112,16 @@ function inspectPage(page: WordPressHtmlPage) {
 	return { restEndpoint, evidence };
 }
 
-async function findWordPressAdmin(page: URL, signal: AbortSignal, getAdminPage: GetAdminPage): Promise<URL | undefined> {
-	const bases = new Set<string>();
-	const firstSegment = page.pathname.split("/")[1];
-	if (firstSegment) bases.add(`/${firstSegment}/`);
-	bases.add("/");
-
-	for (const base of bases) {
-		if (signal.aborted) break;
-		const home = new URL(page.origin);
-		home.pathname = base;
-		const admin = new URL("wp-admin/", home);
-
-		try {
-			const response = await getAdminPage(admin, signal);
-			if (!adminRedirectStatuses.has(response.status) || !response.location) continue;
-			const login = parseWebsiteUrl(response.location, admin);
-			if (login?.origin === home.origin && login.pathname === new URL("wp-login.php", home).pathname) return home;
-		} catch {
-			// An unavailable admin page is not evidence either way.
-		}
+async function hasWordPressAdmin(home: URL, signal: AbortSignal, getAdminPage: GetAdminPage): Promise<boolean> {
+	if (signal.aborted) return false;
+	const admin = new URL("/wp-admin/", home);
+	try {
+		const response = await getAdminPage(admin, signal);
+		if (!adminRedirectStatuses.has(response.status) || !response.location) return false;
+		const login = parseWebsiteUrl(response.location, admin);
+		return login?.origin === home.origin && login.pathname === "/wp-login.php";
+	} catch {
+		return false;
 	}
 }
 
@@ -146,11 +135,11 @@ export async function detectWordPress(
 	const attempted = new Set<string>();
 	const directSignal = AbortSignal.any([signal, AbortSignal.timeout(DIRECT_API_TIMEOUT_MS)]);
 	const directApi = await findWordPressApi(address, getJson, directSignal, undefined, attempted);
-	if (directApi) return { api: directApi, home: directApi.home, page: address };
+	if (directApi) return { api: directApi, home: directApi.home };
 
 	let page: WordPressHtmlPage;
 	try {
-		page = await getHtml(address, signal);
+		page = await getHtml(new URL(address.origin), signal);
 	} catch {
 		return;
 	}
@@ -158,13 +147,11 @@ export async function detectWordPress(
 	if (signal.aborted) return;
 	const inspection = page.body.trim() ? inspectPage(page) : undefined;
 	const api = await findWordPressApi(page.url, getJson, signal, inspection?.restEndpoint, attempted);
-	if (api) return { api, home: api.home, page: page.url };
+	if (api) return { api, home: api.home };
 	if (inspection) {
 		const supportingSignals = [...inspection.evidence].filter((evidence) => evidence !== "uploads");
-		if (supportingSignals.length >= 2) return { home: new URL(page.url.origin), page: page.url };
-		if (supportingSignals.length === 1) {
-			const home = await findWordPressAdmin(page.url, signal, getAdminPage);
-			if (home) return { home, page: page.url };
-		}
+		const home = new URL(page.url.origin);
+		if (supportingSignals.length >= 2 ||
+			(supportingSignals.length === 1 && await hasWordPressAdmin(home, signal, getAdminPage))) return { home };
 	}
 }

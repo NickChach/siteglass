@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { parseScanAddress } from "../lib/website-check/url";
 import { detectWordPress } from "../lib/website-check/wordpress";
 import type { WordPressHtmlPage } from "../lib/website-check/wordpress";
+import { findWordPressApi } from "../lib/website-check/wordpress-api";
 import type { GetJsonPage } from "../lib/website-check/wordpress-api";
 
 const site = new URL("https://example.com/");
@@ -66,38 +68,54 @@ test("an inaccessible admin page does not confirm WordPress", async () => {
 	assert.equal(result, undefined);
 });
 
-test("recognizes an admin redirect for a WordPress installation in a subdirectory", async () => {
-	const address = new URL("https://example.com/blog/a-post/");
-	const requests: string[] = [];
-	const result = await detectWordPress(address, new AbortController().signal, unavailableApi,
-		async (url) => htmlPage(url, '<link rel="stylesheet" href="/blog/wp-content/themes/example/style.css">'),
-		async (url) => {
-			requests.push(url.pathname);
-			return url.pathname === "/blog/wp-admin/"
-				? { status: 302, location: "/blog/wp-login.php?redirect_to=%2Fblog%2Fwp-admin%2F" }
-				: { status: 302, location: "/wp-login.php" };
-		},
-	);
-
-	assert.equal(result?.home.href, "https://example.com/blog/");
-	assert.deepEqual(requests, ["/blog/wp-admin/"]);
+test("submitted addresses select the domain root before browser or server discovery", () => {
+	for (const [input, expected] of [
+		["example.com/random-route", "https://example.com/"],
+		["http://www.example.com/random-route", "http://example.com/"],
+		["https://WWW.example.co.uk/blog/?page=2#post", "https://example.co.uk/"],
+		["news.example.com/blog", "https://news.example.com/"],
+	]) {
+		assert.equal(parseScanAddress(input)?.href, expected);
+	}
+	assert.equal(parseScanAddress("https://user:password@www.example.com/post"), undefined);
+	assert.equal(parseScanAddress("https://www.example.com:8443/post"), undefined);
 });
 
-test("falls back to the root admin page when a post path is not a subdirectory installation", async () => {
-	const address = new URL("https://example.com/2026/a-post/");
+test("a homepage redirect into a directory keeps API and admin discovery at the root", async () => {
+	const landing = new URL("/en/", site);
 	const requests: string[] = [];
-	const result = await detectWordPress(address, new AbortController().signal, unavailableApi,
-		async (url) => htmlPage(url, wordpressComPage),
+	const result = await detectWordPress(site, new AbortController().signal,
+		async (url, signal) => {
+			requests.push(url.href);
+			return unavailableApi(url, signal);
+		},
 		async (url) => {
-			requests.push(url.pathname);
-			return url.pathname === "/wp-admin/"
-				? { status: 302, location: "/wp-login.php" }
-				: { status: 404 };
+			requests.push(url.href);
+			return htmlPage(landing, wordpressComPage);
+		},
+		async (url) => {
+			requests.push(url.href);
+			return { status: 302, location: "/wp-login.php" };
 		},
 	);
 
 	assert.equal(result?.home.href, site.href);
-	assert.deepEqual(requests, ["/2026/wp-admin/", "/wp-admin/"]);
+	assert.deepEqual(requests, ["/wp-json/", "/?rest_route=/", "/", "/wp-admin/"].map((path) => new URL(path, site).href));
+});
+
+test("an advertised API in a directory must identify the root as its site home", async () => {
+	const page = new URL("/blog/", site);
+	const endpoint = new URL("wp-json/", page);
+	for (const home of [page, site]) {
+		const api = await findWordPressApi(page, async (url, signal) => {
+			if (url.href !== endpoint.href) return unavailableApi(url, signal);
+			return {
+				url, status: 200, mediaType: "application/json", totalPages: null,
+				body: JSON.stringify({ home: home.href, namespaces: ["wp/v2"], routes: { "/wp/v2/posts": {} } }),
+			};
+		}, new AbortController().signal, endpoint);
+		assert.equal(api?.home.href, home === site ? site.href : undefined);
+	}
 });
 
 test("does not request the admin page when existing evidence confirms WordPress", async () => {

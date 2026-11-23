@@ -3,7 +3,7 @@ import "server-only";
 import { createPostUrlCheck } from "./post-urls";
 import type { PostUrlScan } from "./post-urls";
 import { parseSitemap } from "./sitemap-xml";
-import { parseWebsiteUrl, sitePath } from "./url";
+import { parseWebsiteUrl } from "./url";
 
 const MAX_SITEMAP_FILES = 8;
 
@@ -19,7 +19,6 @@ function isPostSitemap(url: URL): boolean {
 
 export async function checkPostSitemaps(
 	home: URL,
-	page: URL,
 	signal: AbortSignal,
 	{ getRobots, getSitemap }: SitemapReaders,
 ): Promise<PostUrlScan | undefined> {
@@ -45,16 +44,8 @@ export async function checkPostSitemaps(
 	}
 
 	const candidates = new Set(advertised);
-	const bases = new Set<string>();
-	const firstSegment = page.pathname.split("/")[1];
-	if (!sitePath(home) && firstSegment) bases.add("/" + firstSegment);
-	bases.add(sitePath(home));
-	for (const base of bases) {
-		for (const path of ["wp-sitemap.xml", "sitemap_index.xml", "sitemap.xml", "?sitemap=index"]) {
-			const url = new URL(home.origin);
-			url.pathname = base + "/";
-			candidates.add(new URL(path, url).href);
-		}
+	for (const path of ["/wp-sitemap.xml", "/sitemap_index.xml", "/sitemap.xml", "/?sitemap=index"]) {
+		candidates.add(new URL(path, home).href);
 	}
 
 	const check = createPostUrlCheck(home, "post-sitemap");
