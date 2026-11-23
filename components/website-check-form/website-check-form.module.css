@@ -68,12 +68,16 @@
 	flex-shrink: 0;
 }
 
-.button:hover {
+.button:enabled:hover {
 	background: #2034af;
 }
 
-.button:active {
+.button:enabled:active {
 	background: #192c98;
+}
+
+.button:disabled {
+	cursor: progress;
 }
 
 .hint {
