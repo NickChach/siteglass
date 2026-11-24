@@ -38,6 +38,8 @@ const categoryLabels: Record<MatchedTerm["category"], string> = {
 	adult: "Adult content",
 	cryptocurrency: "Cryptocurrency",
 	gambling: "Gambling",
+	pharmaceuticals: "Pharmaceuticals",
+	streaming: "Streaming",
 };
 
 const initialMatchCount = 3;
@@ -137,7 +139,8 @@ export default function WebsiteCheckReport({ result, pending }: WebsiteCheckRepo
 			)}
 			{scan && scan.urlsChecked > 0 && (
 				<p className={styles.scope}>
-					Siteglass looks for selected English terms about gambling, cryptocurrency and adult content in URL paths. This check alone can’t tell whether a site has been hacked.
+					Siteglass checks public post URL paths for selected terms related to adult content, cryptocurrency,
+					gambling, pharmaceuticals, and streaming. This check alone can’t tell whether a site has been hacked.
 				</p>
 			)}
 		</div>
