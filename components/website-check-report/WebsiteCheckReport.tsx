@@ -4,6 +4,7 @@ import type { MatchedTerm } from "@/lib/website-check/post-path";
 import styles from "./website-check-report.module.css";
 
 type WebsiteCheckReportProps = {
+	className: string;
 	result: WebsiteCheckOutcome | null;
 	pending: boolean;
 };
@@ -96,7 +97,7 @@ function ScanSummary({ scan }: { scan: PostUrlScan }) {
 	);
 }
 
-export default function WebsiteCheckReport({ result, pending }: WebsiteCheckReportProps) {
+export default function WebsiteCheckReport({ className, result, pending }: WebsiteCheckReportProps) {
 	const summaryRef = useRef<HTMLDivElement>(null);
 	const failure = result?.status === "could-not-check" ? failureMessages[result.reason] : undefined;
 	const scan = result?.status === "checked" || result?.status === "partial" ? result : undefined;
@@ -106,9 +107,9 @@ export default function WebsiteCheckReport({ result, pending }: WebsiteCheckRepo
 	}, [result]);
 
 	return (
-		<div className={result ? styles.report : undefined}>
+		<div className={result ? `${className} ${styles.report}` : styles.visuallyHidden}>
 			<div role="status" ref={summaryRef}>
-				{pending && <span className={styles.visuallyHidden}>Checking your website…</span>}
+				{pending && "Checking your website…"}
 				{failure && (
 					<>
 						<h3 className={styles.title}>{failure.title}</h3>

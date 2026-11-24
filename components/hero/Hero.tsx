@@ -19,7 +19,7 @@ export default function Hero() {
 					A website can look normal and still be hacked. Give your WordPress site a closer look, starting with a single link.
 				</p>
 			</section>
-			<InspectionPanel />
+			<InspectionPanel reportClassName={styles.report} />
 		</article>
 	);
 }
