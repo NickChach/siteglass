@@ -1,0 +1,24 @@
+{
+	"@context": "https://schema.org",
+	"@graph": [
+		{
+			"@type": "WebSite",
+			"@id": "https://siteglass-psi.vercel.app/#website",
+			"name": "Siteglass",
+			"url": "https://siteglass-psi.vercel.app/",
+			"inLanguage": "en",
+			"description": "Official website of Siteglass web security tool.",
+			"mainEntity": {
+				"@id": "https://siteglass-psi.vercel.app/#app"
+			}
+		},
+		{
+			"@type": "WebApplication",
+			"@id": "https://siteglass-psi.vercel.app/#app",
+			"name": "Siteglass",
+			"url": "https://siteglass-psi.vercel.app/",
+			"description": "Siteglass checks public WordPress post URLs for terms that may indicate SEO spam.",
+			"applicationCategory": "SecurityApplication"
+		}
+	]
+}

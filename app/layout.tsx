@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import structuredData from "./structuredData.json";
 import "./globals.css";
 
 const IbmPlexSans = IBM_Plex_Sans({
@@ -65,6 +66,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
 	return (
 		<html lang="en" data-scroll-behavior="smooth" className={IbmPlexSans.className}>
+			<head>
+				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}></script>
+			</head>
 			<body>{children}</body>
 			<Analytics />
 			<SpeedInsights />
