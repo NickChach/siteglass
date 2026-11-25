@@ -41,9 +41,9 @@ export default function HowItWorks() {
 					))}
 				</ol>
 				<p className={styles.explanation}>
-					Siteglass checks your public WordPress post URLs for terms related to gambling, cryptocurrency,
-					or adult content. If those topics are unrelated to your site, they can be a sign of SEO poisoning,
-					where someone publishes spam on your site to attract visitors from search results.
+					Siteglass checks your public WordPress post URLs for terms related to gambling, cryptocurrency or adult content. If
+					those topics are unrelated to your site, they can be a sign of SEO poisoning, where someone publishes spam on your site
+					in order to manipulate search engine rankings for his own, often malicious, site.
 				</p>
 			</div>
 		</article>
