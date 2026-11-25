@@ -10,9 +10,37 @@ const IbmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-	title: "Siteglass | Take a closer look at your WordPress site",
+	title: "Siteglass | WordPress SEO Spam Checker",
 	description:
-		"Take a closer look at your website. Siteglass checks WordPress websites for signs they may have been hacked. Start with a single link.",
+		"Take a closer look at your WordPress website. Siteglass checks for signs of SEO poisoning hacks. Start with a single link.",
+	authors: [{ name: "NovaConstant — NickChachlioutis" }],
+	keywords: [
+		"SEO poisoning",
+		"WordPress",
+		"cybersecurity",
+		"WordPress SEO spam",
+		"WordPress SEO poisoning",
+		"WordPress spam checker",
+		"WordPress spam post detection",
+		"WordPress hacked site checker",
+		"WordPress spam URL checker",
+		"SEO spam detection",
+		"suspicious WordPress posts",
+		"check WordPress for spam",
+		"SEO poisoning checker",
+	],
+	robots: {
+		index: true,
+		follow: true,
+		nocache: false,
+		googleBot: {
+			index: true,
+			follow: true,
+			"max-snippet": -1,
+			"max-image-preview": "large",
+			"max-video-preview": -1,
+		},
+	},
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
