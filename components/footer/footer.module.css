@@ -8,6 +8,31 @@
 	font-size: 0.8rem;
 }
 
+.footer a {
+	color: var(--blue);
+}
+
+.logo {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 1.5rem;
+	line-height: 1;
+	color: var(--blue);
+}
+
+.symbol {
+	width: 1.6rem;
+	height: 1.6rem;
+	stroke-width: 2.5;
+	flex-shrink: 0;
+}
+
+.wordmark {
+	transform: translateY(-0.084em);
+	letter-spacing: -0.0625em;
+}
+
 @media (max-width: 48.75rem) {
 	.footer {
 		font-size: 0.75rem;
