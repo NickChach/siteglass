@@ -10,7 +10,7 @@ const IbmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-	title: "Siteglass | WordPress SEO Spam Checker",
+	title: "Siteglass | WordPress SEO Spam Scanner",
 	description:
 		"Take a closer look at your WordPress website. Siteglass checks for signs of SEO poisoning hacks. Start with a single link.",
 	authors: [{ name: "NovaConstant — NickChachlioutis" }],
@@ -40,6 +40,25 @@ export const metadata: Metadata = {
 			"max-image-preview": "large",
 			"max-video-preview": -1,
 		},
+	},
+	openGraph: {
+		title: "Siteglass | WordPress SEO Spam Scanner",
+		description:
+			"Take a closer look at your WordPress website. Siteglass checks for signs of SEO poisoning hacks. Start with a single link.",
+		url: "https://siteglass-psi.vercel.app",
+		siteName: "Siteglass | WordPress SEO Spam Scanner",
+		images: [
+			{
+				url: "/images/siteglass.png",
+				width: 1200,
+				height: 630,
+			},
+		],
+		locale: "en",
+		type: "website",
+	},
+	alternates: {
+		canonical: "https://siteglass-psi.vercel.app",
 	},
 };
 
